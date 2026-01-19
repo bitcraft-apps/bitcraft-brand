@@ -19,9 +19,37 @@ const options = {
 const itcraftPath = textToSVG.getD('itcraft', options);
 const itcraftMetrics = textToSVG.getMetrics('itcraft', options);
 
-// Logomark dimensions (scaled to match text height)
-const logomarkHeight = 48;
-const logomarkWidth = 45.2;
+// Parse path to find actual bounding box (not font metrics)
+function getPathBounds(pathD) {
+  const coords = pathD.match(/[-]?\d+\.?\d*/g).map(Number);
+  let minY = Infinity, maxY = -Infinity;
+  let minX = Infinity, maxX = -Infinity;
+
+  // Simple parsing - get all numeric values and find bounds
+  // Path format uses pairs of x,y coordinates
+  for (let i = 0; i < coords.length; i += 2) {
+    if (i + 1 < coords.length) {
+      const x = coords[i];
+      const y = coords[i + 1];
+      if (!isNaN(x)) {
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+      }
+      if (!isNaN(y)) {
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+      }
+    }
+  }
+  return { minX, maxX, minY, maxY, width: maxX - minX, height: maxY - minY };
+}
+
+const itcraftBounds = getPathBounds(itcraftPath);
+console.log('itcraft actual bounds:', itcraftBounds);
+
+// Logomark dimensions
+const logomarkHeight = 48; // 39.8 + 8.2 = 48
+const logomarkWidth = 45.2; // max x extent (8.2 + 37)
 const gap = 2; // tight spacing
 
 // Logomark SVG content (the "B")
@@ -32,13 +60,19 @@ const logomarkPaths = `
     <rect x="8.2" y="29.5" width="37" height="8.2" rx="4.1"/>
     <rect x="0" y="39.8" width="34.3" height="8.2" rx="4.1"/>`;
 
-// Calculate dimensions
+// Calculate dimensions for horizontal lockup
 const textOffsetX = logomarkWidth + gap;
-const totalWidth = Math.ceil(textOffsetX + itcraftMetrics.width);
-const totalHeight = Math.ceil(Math.max(logomarkHeight, itcraftMetrics.height));
 
-// Vertical alignment - center the text with logomark
-const textOffsetY = (logomarkHeight - itcraftMetrics.height) / 2;
+// Vertically center the text with the logomark using actual bounds
+// Text needs to be shifted so its visual center aligns with logomark center
+const textVisibleHeight = itcraftBounds.maxY - itcraftBounds.minY;
+const textOffsetY = (logomarkHeight - textVisibleHeight) / 2 - itcraftBounds.minY;
+
+// Calculate total dimensions based on actual content
+const totalWidth = Math.ceil(textOffsetX + itcraftBounds.maxX);
+const totalHeight = logomarkHeight; // Use logomark height as reference
+
+console.log('Horizontal lockup dimensions:', totalWidth, 'x', totalHeight);
 
 const colors = [
   { name: '', fill: '#556B2F', desc: 'Dark Olive' },
@@ -73,14 +107,19 @@ colors.forEach(color => {
 
 // Generate vertical lockup SVGs (logomark stacked above text)
 const verticalGap = 16;
-const verticalTotalHeight = logomarkHeight + verticalGap + Math.ceil(itcraftMetrics.height);
-const verticalTotalWidth = Math.max(logomarkWidth + 8.2, Math.ceil(itcraftMetrics.width)); // account for logomark offset
-const logomarkCenterX = (verticalTotalWidth - (logomarkWidth)) / 2;
-const textCenterX = (verticalTotalWidth - itcraftMetrics.width) / 2;
+const verticalTotalHeight = logomarkHeight + verticalGap + Math.ceil(textVisibleHeight);
+const verticalTotalWidth = Math.max(logomarkWidth + 8.2, Math.ceil(itcraftBounds.maxX));
+const logomarkCenterX = (verticalTotalWidth - logomarkWidth) / 2;
+const textCenterX = (verticalTotalWidth - itcraftBounds.maxX) / 2;
+
+// For vertical layout, position text below logomark, accounting for text's top offset
+const verticalTextY = logomarkHeight + verticalGap - itcraftBounds.minY;
+
+console.log('Vertical lockup dimensions:', verticalTotalWidth, 'x', verticalTotalHeight);
 
 colors.forEach(color => {
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${Math.ceil(verticalTotalWidth)} ${verticalTotalHeight}" width="${Math.ceil(verticalTotalWidth)}" height="${verticalTotalHeight}">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${Math.ceil(verticalTotalWidth)} ${Math.ceil(verticalTotalHeight)}" width="${Math.ceil(verticalTotalWidth)}" height="${Math.ceil(verticalTotalHeight)}">
   <!--
     Bitcraft Lockup Vertical - ${color.desc}
     https://github.com/bitcraft-apps/brand
@@ -91,7 +130,7 @@ colors.forEach(color => {
     <g transform="translate(${logomarkCenterX}, 0)">${logomarkPaths}
     </g>
     <!-- itcraft text -->
-    <g transform="translate(${textCenterX}, ${logomarkHeight + verticalGap})">
+    <g transform="translate(${textCenterX}, ${verticalTextY})">
       <path d="${itcraftPath}"/>
     </g>
   </g>
@@ -102,20 +141,31 @@ colors.forEach(color => {
   console.log(`Created: ${filename}`);
 });
 
-// Generate logotype-only SVGs (just "itcraft" - for use cases where B logomark is separate)
-// Actually, let's generate "Bitcraft" full wordmark too for comparison
+// Generate logotype-only SVGs (full "Bitcraft" wordmark)
 const fullPath = textToSVG.getD('Bitcraft', options);
-const fullMetrics = textToSVG.getMetrics('Bitcraft', options);
+const fullBounds = getPathBounds(fullPath);
+console.log('Bitcraft actual bounds:', fullBounds);
+
+const logotypeWidth = Math.ceil(fullBounds.maxX - fullBounds.minX);
+const logotypeHeight = Math.ceil(fullBounds.maxY - fullBounds.minY);
+
+// Shift path to start at 0,0
+const logotypeOffsetX = -fullBounds.minX;
+const logotypeOffsetY = -fullBounds.minY;
+
+console.log('Logotype dimensions:', logotypeWidth, 'x', logotypeHeight);
 
 colors.forEach(color => {
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${Math.ceil(fullMetrics.width)} ${Math.ceil(fullMetrics.height)}" width="${Math.ceil(fullMetrics.width)}" height="${Math.ceil(fullMetrics.height)}">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${logotypeWidth} ${logotypeHeight}" width="${logotypeWidth}" height="${logotypeHeight}">
   <!--
     Bitcraft Logotype - ${color.desc}
     https://github.com/bitcraft-apps/brand
     "Bitcraft" in Poppins SemiBold (text converted to paths)
   -->
-  <path fill="${color.fill}" d="${fullPath}"/>
+  <g transform="translate(${logotypeOffsetX}, ${logotypeOffsetY})">
+    <path fill="${color.fill}" d="${fullPath}"/>
+  </g>
 </svg>`;
 
   const filename = `bitcraft-logotype${color.name}.svg`;
