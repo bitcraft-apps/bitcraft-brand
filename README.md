@@ -53,6 +53,40 @@ Open Graph image: [`logo/exports/og-images/og-default.png`](logo/exports/og-imag
 | Body | Inter | 400 |
 | Code | JetBrains Mono | 400 |
 
+## Website Bundle
+
+This repo can generate a website-ready bundle (favicons, Open Graph images, and tokens) meant to be copied into a website's `public/` directory.
+
+### Build
+
+```sh
+npm run build
+```
+
+This generates a `bundle/` directory (not committed).
+
+### Consume
+
+Copy `bundle/*` into your website `public/` directory.
+
+Outputs:
+
+- Root (favicon expectations):
+  - `favicon.ico`
+  - `favicon-16x16.png`
+  - `favicon-32x32.png`
+  - `apple-touch-icon.png`
+  - `android-chrome-192x192.png`
+  - `android-chrome-512x512.png`
+  - `site.webmanifest`
+- Namespaced (to avoid root clutter):
+  - `brand/tokens.css`
+  - `brand/og/og-default.png`
+
+### CI
+
+GitHub Actions uploads the generated `bundle/` directory as an artifact named `brand-bundle`.
+
 ## Usage Guidelines
 
 ### ✓ Do
