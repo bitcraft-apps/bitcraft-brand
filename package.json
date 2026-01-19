@@ -1,5 +1,11 @@
 {
   "private": true,
+  "scripts": {
+    "export-pngs": "node scripts/export-pngs.js"
+  },
+  "engines": {
+    "node": ">=18.17.0"
+  },
   "devDependencies": {
     "sharp": "^0.34.5"
   }
