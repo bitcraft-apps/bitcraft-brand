@@ -1,0 +1,26 @@
+{
+  "name": "brand",
+  "version": "1.0.0",
+  "description": "Official brand assets for Bitcraft — software development & custom applications.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bitcraft-apps/brand.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bitcraft-apps/brand/issues"
+  },
+  "homepage": "https://github.com/bitcraft-apps/brand#readme",
+  "dependencies": {
+    "text-to-svg": "^3.1.5"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.5"
+  }
+}
