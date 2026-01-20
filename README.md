@@ -87,6 +87,14 @@ Outputs:
 
 GitHub Actions uploads the generated `bundle/` directory as an artifact named `brand-bundle`.
 
+### Release
+
+To create a new release bundle:
+
+1.  Create a new Release in GitHub.
+2.  Tag it with a semantic version (e.g., `v1.2.0`).
+3.  GitHub Actions will automatically build the bundle and upload a `bitcraft-brand-bundle-v1.2.0.zip` to the release assets.
+
 ## Usage Guidelines
 
 ### ✓ Do
