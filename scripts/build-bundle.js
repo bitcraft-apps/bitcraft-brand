@@ -105,15 +105,33 @@ async function exportOgImages() {
   console.log(`  Created: ${path.relative(rootDir, outPath)}`);
 }
 
-function extractHexColor(markdown, name, hex) {
+function extractHexColor(markdown, name) {
   const headingRegex = new RegExp(`^###\\s+${name}\\s*$`, 'mi');
-  if (!headingRegex.test(markdown) || !markdown.includes(hex)) {
+  const match = markdown.match(headingRegex);
+
+  if (!match) {
     throw new Error(
-      `Expected color ${name} ${hex} not found in colors/palette.md (missing section and/or HEX)`
+      `Color section "### ${name}" not found in colors/palette.md`
     );
   }
 
-  return hex;
+  // Search in the content after the header until the next header or end of string
+  const contentAfterHeader = markdown.slice(match.index + match[0].length);
+  const nextHeaderIndex = contentAfterHeader.search(/^#/m);
+  const sectionContent = nextHeaderIndex === -1 
+    ? contentAfterHeader 
+    : contentAfterHeader.slice(0, nextHeaderIndex);
+
+  // Look for a hex code in the section content
+  const hexMatch = sectionContent.match(/#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})\b/);
+
+  if (!hexMatch) {
+    throw new Error(
+      `No HEX color found in section "### ${name}" in colors/palette.md`
+    );
+  }
+
+  return hexMatch[0].toUpperCase();
 }
 
 function getRequiredScale(scale, requiredKeys, sourceLabel) {
@@ -187,12 +205,12 @@ async function exportTokens() {
   const fontsMd = await fsp.readFile(fontsPath, 'utf8');
 
   const colors = {
-    darkOlive: extractHexColor(paletteMd, 'Dark Olive', '#556B2F'),
-    oliveDrab: extractHexColor(paletteMd, 'Olive Drab', '#6B8E23'),
-    forestGreen: extractHexColor(paletteMd, 'Forest Green', '#228B22'),
-    nearBlack: extractHexColor(paletteMd, 'Near Black', '#1A1A1A'),
-    offWhite: extractHexColor(paletteMd, 'Off White', '#F5F5F5'),
-    white: extractHexColor(paletteMd, 'White', '#FFFFFF'),
+    darkOlive: extractHexColor(paletteMd, 'Dark Olive'),
+    oliveDrab: extractHexColor(paletteMd, 'Olive Drab'),
+    forestGreen: extractHexColor(paletteMd, 'Forest Green'),
+    nearBlack: extractHexColor(paletteMd, 'Near Black'),
+    offWhite: extractHexColor(paletteMd, 'Off White'),
+    white: extractHexColor(paletteMd, 'White'),
   };
 
   const fontStacks = parseFonts(fontsMd);
