@@ -8,7 +8,6 @@ const rootDir = path.join(__dirname, '..');
 
 const bundleDir = path.join(rootDir, 'bundle');
 const brandDir = path.join(bundleDir, 'brand');
-const brandOgDir = path.join(brandDir, 'og');
 
 const logoDir = path.join(rootDir, 'logo');
 
@@ -94,9 +93,9 @@ async function exportOgImages() {
   console.log('Generating OG images...');
   assertFileExists(ogSourceSvg);
 
-  await fsp.mkdir(brandOgDir, { recursive: true });
+  await fsp.mkdir(brandDir, { recursive: true });
 
-  const outPath = path.join(brandOgDir, 'og-default.png');
+  const outPath = path.join(brandDir, 'og-default.png');
   await sharp(ogSourceSvg).png().toFile(outPath);
   console.log(`  Created: ${path.relative(rootDir, outPath)}`);
 }
