@@ -15,26 +15,6 @@ const logoDir = path.join(rootDir, 'logo');
 const faviconSourceSvg = path.join(logoDir, 'bitcraft-logo-padded.svg');
 const ogSourceSvg = path.join(logoDir, 'og-images', 'og-default.svg');
 
-const manifest = {
-  name: 'Bitcraft',
-  short_name: 'Bitcraft',
-  icons: [
-    {
-      src: 'android-chrome-192x192.png',
-      sizes: '192x192',
-      type: 'image/png',
-    },
-    {
-      src: 'android-chrome-512x512.png',
-      sizes: '512x512',
-      type: 'image/png',
-    },
-  ],
-  theme_color: '#556B2F',
-  background_color: '#FFFFFF',
-  display: 'standalone',
-};
-
 const faviconPngOutputs = [
   { file: 'favicon-16x16.png', size: 16 },
   { file: 'favicon-32x32.png', size: 32 },
@@ -55,17 +35,33 @@ async function rmAndRecreateDir(dir) {
   await fsp.mkdir(dir, { recursive: true });
 }
 
-async function ensureDir(dir) {
-  await fsp.mkdir(dir, { recursive: true });
-}
-
 async function writeJson(filePath, data) {
   await fsp.writeFile(filePath, JSON.stringify(data, null, 2) + '\n');
 }
 
-async function exportFavicons() {
+async function exportFavicons(themeColor) {
   console.log('Generating favicons...');
   assertFileExists(faviconSourceSvg);
+
+  const manifest = {
+    name: 'Bitcraft',
+    short_name: 'Bitcraft',
+    icons: [
+      {
+        src: 'android-chrome-192x192.png',
+        sizes: '192x192',
+        type: 'image/png',
+      },
+      {
+        src: 'android-chrome-512x512.png',
+        sizes: '512x512',
+        type: 'image/png',
+      },
+    ],
+    theme_color: themeColor,
+    background_color: '#FFFFFF',
+    display: 'standalone',
+  };
 
   const icoInputs = [];
 
@@ -98,7 +94,7 @@ async function exportOgImages() {
   console.log('Generating OG images...');
   assertFileExists(ogSourceSvg);
 
-  await ensureDir(brandOgDir);
+  await fsp.mkdir(brandOgDir, { recursive: true });
 
   const outPath = path.join(brandOgDir, 'og-default.png');
   await sharp(ogSourceSvg).png().toFile(outPath);
@@ -269,16 +265,24 @@ async function exportTokens() {
 }
 `;
 
-  await ensureDir(brandDir);
+  await fsp.mkdir(brandDir, { recursive: true });
   const tokensOutPath = path.join(brandDir, 'tokens.css');
   await fsp.writeFile(tokensOutPath, tokensCss);
   console.log(`  Created: ${path.relative(rootDir, tokensOutPath)}`);
 }
 
+// Moved main to bottom to allow for extracting color
+async function getThemeColor() {
+  const palettePath = path.join(rootDir, 'colors', 'palette.md');
+  const paletteMd = await fsp.readFile(palettePath, 'utf8');
+  return extractHexColor(paletteMd, 'Dark Olive');
+}
+
 async function main() {
   await rmAndRecreateDir(bundleDir);
 
-  await exportFavicons();
+  const themeColor = await getThemeColor();
+  await exportFavicons(themeColor);
   await exportOgImages();
   await exportTokens();
 
