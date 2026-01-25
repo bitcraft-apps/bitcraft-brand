@@ -14,6 +14,14 @@ const logoDir = path.join(rootDir, 'logo');
 const faviconSourceSvg = path.join(logoDir, 'bitcraft-logo-padded.svg');
 const ogSourceSvg = path.join(logoDir, 'og-images', 'og-default.svg');
 
+// Core logo variants for website use (full-color + mono variants for light/dark backgrounds).
+// Additional variants in logo/ (padded, single-color, lockups) are for other contexts.
+const bundleLogos = [
+  'bitcraft-logo.svg',
+  'bitcraft-logo-mono-white.svg',
+  'bitcraft-logo-mono-black.svg',
+];
+
 const faviconPngOutputs = [
   { file: 'favicon-16x16.png', size: 16 },
   { file: 'favicon-32x32.png', size: 32 },
@@ -295,15 +303,7 @@ async function exportTokens() {
 async function copyLogos() {
   console.log('Copying logo SVGs...');
 
-  // Core logo variants for website use (full-color + mono variants for light/dark backgrounds).
-  // Additional variants in logo/ (padded, single-color, lockups) are for other contexts.
-  const logos = [
-    'bitcraft-logo.svg',
-    'bitcraft-logo-mono-white.svg',
-    'bitcraft-logo-mono-black.svg',
-  ];
-
-  for (const logo of logos) {
+  for (const logo of bundleLogos) {
     const src = path.join(logoDir, logo);
     const dest = path.join(brandDir, logo);
     assertFileExists(src);
